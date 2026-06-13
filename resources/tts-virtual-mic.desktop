@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=TTS Virtual Microphone
+Comment=Text-to-Speech with virtual audio input
+Exec=tts-virtual-mic
+Icon=tts-virtual-mic
+Type=Application
+Categories=Audio;Utility;
+Terminal=false

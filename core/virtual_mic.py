@@ -8,8 +8,7 @@ SINK_DESCRIPTION = "TTS-Virtual-Microphone"
 
 class VirtualMic:
     def __init__(self):
-        self._null_mod_id: str | None = None
-        self._loop_mod_id: str | None = None
+        self._module_id: str | None = None
 
     def start(self) -> bool:
         self.stop()
@@ -24,37 +23,20 @@ class VirtualMic:
             )
             if result.returncode != 0:
                 return False
-            self._null_mod_id = result.stdout.strip()
+            self._module_id = result.stdout.strip()
             time.sleep(0.3)
-
-            result = subprocess.run(
-                [
-                    "pactl", "load-module", "module-loopback",
-                    f"source={SINK_NAME}.monitor",
-                ],
-                capture_output=True, text=True, timeout=5
-            )
-            if result.returncode == 0:
-                self._loop_mod_id = result.stdout.strip()
-
             return self.is_active()
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
 
     def stop(self):
-        if self._loop_mod_id:
+        if self._module_id:
             subprocess.run(
-                ["pactl", "unload-module", self._loop_mod_id],
+                ["pactl", "unload-module", self._module_id],
                 capture_output=True, timeout=5
             )
-            self._loop_mod_id = None
-        if self._null_mod_id:
-            subprocess.run(
-                ["pactl", "unload-module", self._null_mod_id],
-                capture_output=True, timeout=5
-            )
-            self._null_mod_id = None
-        time.sleep(0.3)
+            self._module_id = None
+            time.sleep(0.3)
 
     def is_active(self) -> bool:
         result = subprocess.run(

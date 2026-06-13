@@ -38,7 +38,7 @@ bash build.sh
 1. Launch the app — status shows "Virtual Mic Active"
 2. Select **Monitor of TTS-Virtual-Microphone** as your audio input in Discord/Zoom/etc.
 3. Type text and click **Speak** (or Ctrl+Enter)
-4. The audio plays through your speakers AND the virtual mic simultaneously
+4. The audio plays to your speakers AND the virtual mic input simultaneously
 
 ## Project Structure
 
@@ -46,7 +46,7 @@ bash build.sh
 main.py                  Entry point
 core/
   tts_engine.py          Piper TTS wrapper
-  virtual_mic.py         PipeWire null sink + loopback
+  virtual_mic.py         PipeWire null sink
   audio_player.py        WAV playback via pw-play
 ui/
   main_window.py         PyQt5 GUI

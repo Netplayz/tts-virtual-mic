@@ -1,4 +1,5 @@
 import subprocess
+import time
 import logging
 
 logger = logging.getLogger(__name__)
@@ -6,35 +7,42 @@ logger = logging.getLogger(__name__)
 
 class AudioPlayer:
     def __init__(self):
-        self._process: subprocess.Popen | None = None
+        self._processes: list[subprocess.Popen] = []
 
     def play_wav_file(self, wav_path: str, target: str):
         self.stop()
-        self._process = subprocess.Popen(
+        p1 = subprocess.Popen(
             ["pw-play", "--target", target, wav_path],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
+            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
         )
+        self._processes = [p1]
+        time.sleep(0.15)
+        p2 = subprocess.Popen(
+            ["pw-play", wav_path],
+            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+        )
+        self._processes.append(p2)
 
     def stop(self):
-        if self._process and self._process.poll() is None:
-            self._process.terminate()
-            try:
-                self._process.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                self._process.kill()
-            self._process = None
+        for p in self._processes:
+            if p.poll() is None:
+                p.terminate()
+                try:
+                    p.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    p.kill()
+        self._processes = []
 
     def is_playing(self) -> bool:
-        return self._process is not None and self._process.poll() is None
+        return any(p.poll() is None for p in self._processes)
 
     def wait(self):
-        if self._process:
+        for p in self._processes:
             try:
-                self._process.wait()
-                if self._process.returncode != 0:
-                    err = self._process.stderr.read() if self._process.stderr else b""
-                    logger.warning("pw-play failed (exit %d): %s", self._process.returncode, err.decode(errors="replace"))
+                p.wait()
+                if p.returncode != 0:
+                    err = p.stderr.read() if p.stderr else b""
+                    logger.warning("pw-play failed (exit %d): %s", p.returncode, err.decode(errors="replace"))
             except Exception:
                 pass
-            self._process = None
+        self._processes = []
